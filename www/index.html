@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta http-equiv="Content-Security-Policy" content="default-src * data:;img-src * data: blob:;style-src * 'unsafe-inline'; script-src * 'unsafe-inline' 'unsafe-eval'">
+  <script src="components/loader.js"></script>
+  <script src="lib/onsenui/js/onsenui.min.js"></script>
+
+  <link rel="stylesheet" href="components/loader.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsenui.css">
+  <link rel="stylesheet" href="lib/onsenui/css/onsen-css-components.css">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script>
+		ons.ready(function() {
+		  // ファイルを選択したら呼ばれるイベント
+		  $("#file").on("change", function(e) {
+		    // ファイルを取得
+		    var f = e.target.files[0];
+		    if (!f)
+		      return;
+		    
+		    // サブスクリプションキーを設定
+		    var SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
+		    
+		    // 描画のリセット
+		    $("#preview").html("");
+		    $("#info").html("");
+		    
+		    // 画像を表示する処理
+		    loadImage.parseMetaData(f, function (data) {
+		    	var options = {canvas: true, maxWidth: 320};
+		    	// console.log(data.exif.get('Orientation'));
+		    	if (data.exif) {
+		    		options.orientation = data.exif.get('Orientation');
+		    	}
+		    	// console.log(data.exif.get('ImageWidth'))
+		    	loadImage(f, function(canvas) {
+		    		$("#preview").html(canvas);
+		    	}, options);
+		    });
+		    
+		    
+		    // ファイルとして読み込み
+		    var r = new FileReader();
+		    r.onload = function(e) {
+		      // Array Bufferとして取得
+		      var contents = e.target.result;
+		      
+		      // APIを呼ぶ際のパラメータ
+		      var params = {
+		        "visualFeatures": "Categories,Tags,Description,Faces,ImageType,Color,Adult",
+		        "details": "Celebrities",
+		        "language": "en",
+		      };
+		      // Ajaxを実行
+		      $.ajax({
+		        url: "https://eastus2.api.cognitive.microsoft.com/vision/v1.0/analyze?" + $.param(params),
+		        contentType: "application/octet-stream",
+		        headers: {
+		          "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY
+		        },
+		        type: "POST",
+		        data: contents,
+		        processData: false
+		      })
+		      .done(function(data) {
+		      	var percentage = 320 / data.metadata.width;
+		      	var ctx = $("canvas")[0].getContext('2d');
+		      	
+		        // 処理成功した場合
+		        // 顔データがあれば描画
+		        if (data.faces.length > 0) {
+		          for (var i = 0; i < data.faces.length; i++) {
+		            var face = data.faces[i];
+		            var f = face.faceRectangle;
+		            ctx.strokeStyle = "rgb(200, 0, 0)";
+		            ctx.strokeRect(f.top * percentage, f.left * percentage, f.width * percentage, f.height * percentage);
+		            ctx.stroke();
+		          }
+		        }
+		        // それ以外の写真のメタデータを表示
+		        $("#info").append(`
+		          <ons-list-header>カテゴリ</ons-list-header>
+		          <ons-list-item>${data.categories[0].name}</ons-list-item>
+		          <ons-list-header>タグ</ons-list-header>
+		          <ons-list-item>${data.description.tags.join(", ")}</ons-list-item>
+		          <ons-list-header>状況</ons-list-header>
+		          <ons-list-item>${data.description.captions[0].text}</ons-list-item>
+		        `);
+		      })
+		      .fail(function(e) {
+		        // エラーの場合
+		        alert(`error : ${e.responseJSON.message}`);
+		      });
+		    }
+		    r.readAsArrayBuffer(f);
+		  });
+		  console.log("Onsen UI is ready!");
+		});
+  </script>
+</head>
+<body>
+  
+  <ons-page>
+  	<p style="text-align:center" id="preview">
+	  	<ons-icon size="250px" icon="photo"></ons-icon>
+  	</p>
+  	<p>
+  		<input type="file" id="file" />
+		  <!-- <ons-button id="photo" modifier="large">Take photo</ons-button> -->
+		</p>
+		<p>
+			<ons-list>
+    		<ons-list-header>読み取った情報</ons-list-header>
+    		<div id="info">
+    		</div>
+    	</ons-list>
+		</p>
+	</ons-page>
+</body>
+</html>

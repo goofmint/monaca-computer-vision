@@ -1,0 +1,15 @@
+{
+  "name": "js-load-image",
+  "homepage": "https://github.com/kovacssupki/JavaScript-Load-Image",
+  "version": "2.11.0",
+  "_release": "2.11.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "v2.11.0",
+    "commit": "832785cb8b58c57b38fb16b124053794cc97ca34"
+  },
+  "_source": "https://github.com/kovacssupki/JavaScript-Load-Image.git",
+  "_target": "2.11.0",
+  "_originalSource": "js-load-image",
+  "_direct": true
+}
