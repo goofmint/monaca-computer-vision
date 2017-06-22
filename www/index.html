@@ -19,11 +19,14 @@
 		    // ファイルを取得
 		    var f = e.target.files[0];
 		    if (!f)
-		      return;
-		    
+		      return;		
+
+		    // エンドポイントを設定
+		    var ENDPOINT = "YOUR_ENDPOINT";
+
 		    // サブスクリプションキーを設定
 		    var SUBSCRIPTION_KEY = "YOUR_SUBSCRIPTION_KEY";
-		    
+
 		    // 描画のリセット
 		    $("#preview").html("");
 		    $("#info").html("");
@@ -56,7 +59,7 @@
 		      };
 		      // Ajaxを実行
 		      $.ajax({
-		        url: "https://eastus2.api.cognitive.microsoft.com/vision/v1.0/analyze?" + $.param(params),
+		        url: ENDPOINT + "/analyze?" + $.param(params),
 		        contentType: "application/octet-stream",
 		        headers: {
 		          "Ocp-Apim-Subscription-Key": SUBSCRIPTION_KEY
